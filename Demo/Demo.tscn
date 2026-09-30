@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dw7645iyj8msr"]
+
+[ext_resource type="Script" uid="uid://blbdhf2ynrgud" path="res://addons/stat_bar/stat_bar.gd" id="1_dichd"]
+
+[node name="Demo" type="Control" unique_id=1838527204]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StatBar" type="Control" parent="." unique_id=1964315329]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_dichd")
+metadata/_custom_type_script = "uid://blbdhf2ynrgud"
