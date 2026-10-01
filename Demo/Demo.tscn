@@ -7,7 +7,7 @@
 
 [sub_resource type="Resource" id="Resource_5w1ac"]
 script = ExtResource("2_5w1ac")
-top_left = 256.0
+top_left = 202.0
 bottom_right = 256.0
 bottom_left = 256.0
 metadata/_custom_type_script = "uid://ccco40sue0yhm"
@@ -22,7 +22,7 @@ border_color = Color(0, 0, 0, 1)
 corners = SubResource("Resource_5w1ac")
 metadata/_custom_type_script = "uid://bydniegdsckg8"
 
-[sub_resource type="Resource" id="Resource_owpvx"]
+[sub_resource type="Resource" id="Resource_emas2"]
 script = ExtResource("3_dosfn")
 metadata/_custom_type_script = "uid://bw10745bpevbs"
 
@@ -39,7 +39,7 @@ anchors_preset = 0
 offset_right = 321.0
 offset_bottom = 40.0
 script = ExtResource("1_dichd")
-value = 8.62
+value = 10.0
 style = SubResource("Resource_qxxsj")
-fill = SubResource("Resource_owpvx")
+fill = SubResource("Resource_emas2")
 metadata/_custom_type_script = "uid://blbdhf2ynrgud"
