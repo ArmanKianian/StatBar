@@ -1,6 +1,21 @@
 [gd_scene format=3 uid="uid://dw7645iyj8msr"]
 
 [ext_resource type="Script" uid="uid://blbdhf2ynrgud" path="res://addons/stat_bar/stat_bar.gd" id="1_dichd"]
+[ext_resource type="Script" uid="uid://bydniegdsckg8" path="res://addons/stat_bar/resources/stat_bar_style.gd" id="2_hdj7n"]
+[ext_resource type="Script" uid="uid://bw10745bpevbs" path="res://addons/stat_bar/resources/stat_bar_fill.gd" id="3_dosfn"]
+
+[sub_resource type="Resource" id="Resource_qxxsj"]
+script = ExtResource("2_hdj7n")
+background_color = Color(0.9471994, 0.9471994, 0.9471994, 1)
+fill_color = Color(0.3554275, 0.045874752, 0.33663997, 1)
+border_enabled = true
+border_width = 3.0
+border_color = Color(1, 0.3647059, 1, 1)
+metadata/_custom_type_script = "uid://bydniegdsckg8"
+
+[sub_resource type="Resource" id="Resource_dosfn"]
+script = ExtResource("3_dosfn")
+metadata/_custom_type_script = "uid://bw10745bpevbs"
 
 [node name="Demo" type="Control" unique_id=1838527204]
 layout_mode = 3
@@ -10,9 +25,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="StatBar" type="Control" parent="." unique_id=1964315329]
+[node name="StatBar" type="Control" parent="." unique_id=998650667]
 anchors_preset = 0
-offset_right = 40.0
+offset_right = 321.0
 offset_bottom = 40.0
 script = ExtResource("1_dichd")
+value = 75.0
+style = SubResource("Resource_qxxsj")
+fill = SubResource("Resource_dosfn")
 metadata/_custom_type_script = "uid://blbdhf2ynrgud"
