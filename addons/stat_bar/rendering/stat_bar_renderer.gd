@@ -19,20 +19,110 @@ func draw(
 		background_color = style.background_color
 		fill_color = style.fill_color
 
-	canvas.draw_rect(bar_rect, background_color)
+	var background_box := _create_style_box(
+		background_color,
+		style,
+		bar_rect.size
+	)
+
+	canvas.draw_style_box(background_box, bar_rect)
 
 	var fill_area := _get_fill_area(bar_rect, fill)
 	var fill_rect := _get_fill_rect(fill_area, fill_ratio, fill)
 
-	canvas.draw_rect(fill_rect, fill_color)
+	if fill_rect.size.x > 0.0 and fill_rect.size.y > 0.0:
+		var fill_box := _create_style_box(
+			fill_color,
+			style,
+			fill_rect.size
+		)
+
+		canvas.draw_style_box(fill_box, fill_rect)
 
 	if style != null and style.border_enabled and style.border_width > 0.0:
-		canvas.draw_rect(
-			bar_rect,
-			style.border_color,
-			false,
-			style.border_width
+		var border_box := _create_style_box(
+			Color.TRANSPARENT,
+			style,
+			bar_rect.size
 		)
+
+		border_box.border_width_left = int(style.border_width)
+		border_box.border_width_top = int(style.border_width)
+		border_box.border_width_right = int(style.border_width)
+		border_box.border_width_bottom = int(style.border_width)
+		border_box.border_color = style.border_color
+
+		canvas.draw_style_box(border_box, bar_rect)
+
+
+func _create_style_box(
+	color: Color,
+	style: StatBarStyle,
+	box_size: Vector2
+) -> StyleBoxFlat:
+	var style_box := StyleBoxFlat.new()
+	style_box.bg_color = color
+
+	if style == null or style.corners == null:
+		return style_box
+
+	if style.corners is StatBarCorner:
+		var corner := style.corners as StatBarCorner
+		var radius := _safe_radius(corner.radius)
+
+		_apply_corners(
+			style_box,
+			radius,
+			radius,
+			radius,
+			radius,
+			box_size
+		)
+
+	elif style.corners is StatBarCorners:
+		var corners := style.corners as StatBarCorners
+
+		_apply_corners(
+			style_box,
+			_safe_radius(corners.top_left),
+			_safe_radius(corners.top_right),
+			_safe_radius(corners.bottom_right),
+			_safe_radius(corners.bottom_left),
+			box_size
+		)
+
+	return style_box
+
+
+func _apply_corners(
+	style_box: StyleBoxFlat,
+	top_left: float,
+	top_right: float,
+	bottom_right: float,
+	bottom_left: float,
+	box_size: Vector2
+) -> void:
+	var max_radius := minf(
+		box_size.x,
+		box_size.y
+	) * 0.5
+
+	top_left = minf(top_left, max_radius)
+	top_right = minf(top_right, max_radius)
+	bottom_right = minf(bottom_right, max_radius)
+	bottom_left = minf(bottom_left, max_radius)
+
+	style_box.corner_radius_top_left = int(top_left)
+	style_box.corner_radius_top_right = int(top_right)
+	style_box.corner_radius_bottom_right = int(bottom_right)
+	style_box.corner_radius_bottom_left = int(bottom_left)
+
+
+func _safe_radius(radius) -> float:
+	if radius == null:
+		return 0.0
+
+	return maxf(float(radius), 0.0)
 
 
 func _get_fill_area(

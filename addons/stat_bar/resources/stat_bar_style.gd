@@ -17,3 +17,8 @@ extends Resource
 @export var border_enabled: bool = false
 @export_range(0.0, 32.0, 1.0) var border_width: float = 1.0
 @export var border_color: Color = Color.WHITE
+
+
+@export_category("Corners")
+
+@export var corners: StatBarCornerBase
