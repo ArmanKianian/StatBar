@@ -3,6 +3,9 @@ class_name StatBarRenderer
 extends RefCounted
 
 
+const CORNER_SEGMENTS := 12
+
+
 func draw(
 	canvas: CanvasItem,
 	bar_size: Vector2,
@@ -31,13 +34,17 @@ func draw(
 	var fill_rect := _get_fill_rect(fill_area, fill_ratio, fill)
 
 	if fill_rect.size.x > 0.0 and fill_rect.size.y > 0.0:
-		var fill_box := _create_style_box(
-			fill_color,
-			style,
-			fill_rect.size
+		var fill_polygon := _create_fill_polygon(
+			bar_rect,
+			fill_rect,
+			style
 		)
 
-		canvas.draw_style_box(fill_box, fill_rect)
+		if fill_polygon.size() >= 3:
+			canvas.draw_colored_polygon(
+				PackedVector2Array(fill_polygon),
+				fill_color
+			)
 
 	if style != null and style.border_enabled and style.border_width > 0.0:
 		var border_box := _create_style_box(
@@ -116,6 +123,258 @@ func _apply_corners(
 	style_box.corner_radius_top_right = int(top_right)
 	style_box.corner_radius_bottom_right = int(bottom_right)
 	style_box.corner_radius_bottom_left = int(bottom_left)
+
+
+func _create_fill_polygon(
+	bar_rect: Rect2,
+	fill_rect: Rect2,
+	style: StatBarStyle
+) -> Array[Vector2]:
+	var rounded_polygon := _create_rounded_rect_polygon(
+		bar_rect,
+		style
+	)
+
+	return _clip_polygon_to_rect(
+		rounded_polygon,
+		fill_rect
+	)
+
+
+func _create_rounded_rect_polygon(
+	rect: Rect2,
+	style: StatBarStyle
+) -> Array[Vector2]:
+	var top_left := 0.0
+	var top_right := 0.0
+	var bottom_right := 0.0
+	var bottom_left := 0.0
+
+	if style != null and style.corners != null:
+		if style.corners is StatBarCorner:
+			var corner := style.corners as StatBarCorner
+			var radius := _safe_radius(corner.radius)
+
+			top_left = radius
+			top_right = radius
+			bottom_right = radius
+			bottom_left = radius
+
+		elif style.corners is StatBarCorners:
+			var corners := style.corners as StatBarCorners
+
+			top_left = _safe_radius(corners.top_left)
+			top_right = _safe_radius(corners.top_right)
+			bottom_right = _safe_radius(corners.bottom_right)
+			bottom_left = _safe_radius(corners.bottom_left)
+
+	var max_radius := minf(
+		rect.size.x,
+		rect.size.y
+	) * 0.5
+
+	top_left = minf(top_left, max_radius)
+	top_right = minf(top_right, max_radius)
+	bottom_right = minf(bottom_right, max_radius)
+	bottom_left = minf(bottom_left, max_radius)
+
+	var polygon: Array[Vector2] = []
+
+	_add_corner(
+		polygon,
+		rect.position + Vector2(top_left, top_left),
+		top_left,
+		180.0,
+		270.0
+	)
+
+	_add_corner(
+		polygon,
+		rect.position + Vector2(
+			rect.size.x - top_right,
+			top_right
+		),
+		top_right,
+		270.0,
+		360.0
+	)
+
+	_add_corner(
+		polygon,
+		rect.position + Vector2(
+			rect.size.x - bottom_right,
+			rect.size.y - bottom_right
+		),
+		bottom_right,
+		0.0,
+		90.0
+	)
+
+	_add_corner(
+		polygon,
+		rect.position + Vector2(
+			bottom_left,
+			rect.size.y - bottom_left
+		),
+		bottom_left,
+		90.0,
+		180.0
+	)
+
+	return polygon
+
+
+func _add_corner(
+	polygon: Array[Vector2],
+	center: Vector2,
+	radius: float,
+	start_angle: float,
+	end_angle: float
+) -> void:
+	if radius <= 0.0:
+		polygon.append(center)
+		return
+
+	for index in range(CORNER_SEGMENTS + 1):
+		var ratio := float(index) / float(CORNER_SEGMENTS)
+		var angle := deg_to_rad(
+			lerpf(start_angle, end_angle, ratio)
+		)
+
+		polygon.append(
+			center + Vector2(
+				cos(angle),
+				sin(angle)
+			) * radius
+		)
+
+
+func _clip_polygon_to_rect(
+	polygon: Array[Vector2],
+	clip_rect: Rect2
+) -> Array[Vector2]:
+	var result := polygon
+
+	result = _clip_polygon_edge(
+		result,
+		clip_rect.position.x,
+		0
+	)
+
+	result = _clip_polygon_edge(
+		result,
+		clip_rect.end.x,
+		1
+	)
+
+	result = _clip_polygon_edge(
+		result,
+		clip_rect.position.y,
+		2
+	)
+
+	result = _clip_polygon_edge(
+		result,
+		clip_rect.end.y,
+		3
+	)
+
+	return result
+
+
+func _clip_polygon_edge(
+	polygon: Array[Vector2],
+	edge: float,
+	edge_type: int
+) -> Array[Vector2]:
+	if polygon.is_empty():
+		return []
+
+	var result: Array[Vector2] = []
+
+	for index in range(polygon.size()):
+		var current := polygon[index]
+		var previous := polygon[
+			(index - 1 + polygon.size()) % polygon.size()
+		]
+
+		var current_inside := _is_inside_edge(
+			current,
+			edge,
+			edge_type
+		)
+
+		var previous_inside := _is_inside_edge(
+			previous,
+			edge,
+			edge_type
+		)
+
+		if current_inside != previous_inside:
+			result.append(
+				_intersect_edge(
+					previous,
+					current,
+					edge,
+					edge_type
+				)
+			)
+
+		if current_inside:
+			result.append(current)
+
+	return result
+
+
+func _is_inside_edge(
+	point: Vector2,
+	edge: float,
+	edge_type: int
+) -> bool:
+	match edge_type:
+		0:
+			return point.x >= edge
+
+		1:
+			return point.x <= edge
+
+		2:
+			return point.y >= edge
+
+		3:
+			return point.y <= edge
+
+	return false
+
+
+func _intersect_edge(
+	start: Vector2,
+	end: Vector2,
+	edge: float,
+	edge_type: int
+) -> Vector2:
+	var difference := end - start
+
+	if edge_type == 0 or edge_type == 1:
+		if is_zero_approx(difference.x):
+			return start
+
+		var ratio := (edge - start.x) / difference.x
+
+		return Vector2(
+			edge,
+			start.y + difference.y * ratio
+		)
+
+	if is_zero_approx(difference.y):
+		return start
+
+	var ratio := (edge - start.y) / difference.y
+
+	return Vector2(
+		start.x + difference.x * ratio,
+		edge
+	)
 
 
 func _safe_radius(radius) -> float:
